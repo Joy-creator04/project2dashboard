@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyberpunk Financial Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet" />
+  <style>
+    /* Your original styles - unchanged */
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #0a0a1a;
+      color: #0ff;
+      font-family: 'Orbitron', sans-serif;
+      --text-color: #0ff;
+    }
+    h1, h3 { text-align: center; color: #0ff; text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff; }
+    .top-bar { background: #070722; padding: 10px 20px; font-size: 1.1em; font-weight: bold; color: #0ff; text-shadow: 0 0 6px #0ff; border-bottom: 2px solid #0ff; margin-bottom: 30px; }
+    .logo { user-select: none; }
+    .currency-selector { margin: 20px auto; text-align: center; font-size: 1.1em; }
+    select { background: #111126; color: #0ff; border: 1px solid #0ff; padding: 6px 12px; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-size: 1em; cursor: pointer; box-shadow: 0 0 5px #0ff; transition: background 0.3s ease; }
+    select:hover { background: #0ff; color: #000; }
+    .dashboard { display: flex; justify-content: center; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; }
+    .card { background: #0f0f1a; border: 2px solid #0ff; border-radius: 12px; padding: 20px; width: 220px; box-shadow: 0 0 10px #0ff, 0 0 20px #0ff inset; position: relative; transition: box-shadow 0.3s ease; cursor: default; }
+    .card:hover { box-shadow: 0 0 20px #0ff, 0 0 40px #0ff inset; }
+    .card h2 { margin-top: 0; color: #0ff; text-shadow: 0 0 6px #0ff; }
+    .card p { font-size: 1.5em; font-weight: bold; color: #0ff; text-shadow: 0 0 8px #0ff; margin: 10px 0 0 0; }
+    .tooltip { position: absolute; top: 10px; right: 10px; font-size: 0.75em; background: #000a; color: #0ff; padding: 3px 6px; border-radius: 6px; box-shadow: 0 0 5px #0ff; user-select: none; }
+    .category-table { width: 90%; max-width: 600px; margin: 0 auto 40px auto; border-collapse: collapse; box-shadow: 0 0 10px #0ff inset; background: #0f0f1a; border-radius: 12px; overflow: hidden; font-family: 'Orbitron', monospace; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 15px; border-bottom: 1px solid #0ff; text-align: left; color: #0ff; text-shadow: 0 0 4px #0ff; }
+    th { background: #111126; border-bottom: 2px solid #0ff; }
+    tr:hover { background: #001f33; cursor: pointer; box-shadow: 0 0 15px #0ff; }
+    form { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; background: #0f0f1a; padding: 20px; border-radius: 12px; box-shadow: 0 0 15px #0ff inset; max-width: 700px; margin: 0 auto 60px auto; font-family: 'Orbitron', monospace; }
+    input, select, button { font-family: 'Orbitron', monospace; font-size: 1em; padding: 10px; border-radius: 8px; border: 1px solid #0ff; background: #111126; color: #0ff; box-shadow: 0 0 8px #0ff; transition: background 0.3s ease, color 0.3s ease; }
+    input::placeholder { color: #0ff99; text-shadow: 0 0 4px #0ff99; }
+    input:focus, select:focus, button:focus { outline: none; background: #0ff; color: #000; box-shadow: 0 0 12px #0ff; }
+    button { cursor: pointer; font-weight: bold; border: 2px solid #0ff; box-shadow: 0 0 15px #0ff; width: 120px; }
+    button:hover { background: #0ff; color: #000; box-shadow: 0 0 25px #0ff; }
+    #entryMsg { color: #0ff; text-shadow: 0 0 10px #0ff; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; }
+    .toggle-mode { display: block; margin: 0 auto 40px auto; background: #111126; border: 2px solid #0ff; color: #0ff; padding: 10px 20px; border-radius: 12px; font-family: 'Orbitron', monospace; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px #0ff; transition: background 0.3s ease, color 0.3s ease; }
+    .toggle-mode:hover { background: #0ff; color: #000; box-shadow: 0 0 25px #0ff; }
+  </style>
+</head>
+<body>
+  <div class="top-bar"><div class="logo">© 2025 Joy Finance</div></div>
+  <h1>Cyberpunk Financial Dashboard</h1>
+  <div class="currency-selector">
+    <label for="currency">Currency: </label>
+    <select id="currency">
+      <option value="KRW">₩ KRW</option>
+      <option value="USD">$ USD</option>
+      <option value="EUR">€ EUR</option>
+    </select>
+  </div>
+  <div class="dashboard">
+    <div class="card"><div class="tooltip">Total earned income</div><h2>Total Income</h2><p id="income">₩0</p></div>
+    <div class="card"><div class="tooltip">All expenses combined</div><h2>Total Expenses</h2><p id="expense">₩0</p></div>
+    <div class="card"><div class="tooltip">Income minus expenses</div><h2>Net Balance</h2><p id="balance">₩0</p></div>
+  </div>
+  <div class="category-table">
+    <h3>Expenses by Category</h3>
+    <table id="categoryTable"><tr><th>Category</th><th>Amount</th></tr></table>
+  </div>
+  <div class="card chart-card">
+    <h3>Spending by Category</h3>
+    <canvas id="categoryChart" width="280" height="280"></canvas>
+  </div>
+  <div class="category-table" style="margin-top: 20px;">
+    <h3>Add a Transaction</h3>
+    <form id="entryForm">
+      <input type="date" id="date" required />
+      <input type="text" id="category" placeholder="Category" required />
+      <input type="text" id="description" placeholder="Description" required />
+      <select id="type" required>
+        <option value="Income">Income</option>
+        <option value="Expenses">Expenses</option>
+      </select>
+      <input type="number" id="amount" placeholder="Amount" required />
+      <button type="submit">Submit</button>
+    </form>
+    <p id="entryMsg"></p>
+  </div>
+  <button class="toggle-mode" onclick="toggleMode()">Toggle Mode</button>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const scriptUrl = "YOUR_WEB_APP_URL";
+
+    const exchangeRates = { KRW: 1, USD: 0.00077, EUR: 0.00071 };
+    const formatters = {
+      KRW: new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }),
+      USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
+      EUR: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }),
+    };
+
+    async function loadData() {
+      try {
+        const response = await fetch(scriptUrl);
+        if (!response.ok) throw new Error("Network response was not ok");
+        const data = await response.json();
+        const currency = document.getElementById("currency").value;
+        const rate = exchangeRates[currency];
+        const formatter = formatters[currency];
+        document.getElementById("income").innerText = formatter.format(data.income * rate);
+        document.getElementById("expense").innerText = formatter.format(data.expense * rate);
+        document.getElementById("balance").innerText = formatter.format(data.balance * rate);
+        const table = document.getElementById("categoryTable");
+        table.innerHTML = "<tr><th>Category</th><th>Amount</th></tr>";
+        const labels = [], values = [];
+        for (const category in data.categories) {
+          const value = data.categories[category] * rate;
+          labels.push(category);
+          values.push(value);
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${category}</td><td>${formatter.format(value)}</td>`;
+          table.appendChild(row);
+        }
+        const ctx = document.getElementById("categoryChart").getContext("2d");
+        const chartColors = ['#ff00ff', '#00fff7', '#ffaa00', '#00ff44', '#4477ff', '#ff4444', '#aa00ff'];
+        if (window.myChart) window.myChart.destroy();
+        window.myChart = new Chart(ctx, {
+          type: 'pie',
+          data: { labels, datasets: [{ data: values, backgroundColor: chartColors, borderColor: "#111", borderWidth: 1 }] },
+          options: { plugins: { legend: { labels: { color: getComputedStyle(document.body).getPropertyValue('--text-color').trim() } } } }
+        });
+      } catch (error) { console.error("Error fetching financial data:", error); }
+    }
+
+    document.getElementById("currency").addEventListener("change", loadData);
+    window.onload = loadData;
+    setInterval(loadData, 60000);
+
+    document.getElementById("entryForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = {
+        date: document.getElementById("date").value,
+        category: document.getElementById("category").value,
+        description: document.getElementById("description").value,
+        type: document.getElementById("type").value,
+        amount: parseFloat(document.getElementById("amount").value)
+      };
+      try {
+        const res = await fetch(scriptUrl, {
+          method: "POST",
+          body: JSON.stringify(formData),
+          headers: { "Content-Type": "application/json" }
+        });
+        const result = await res.json();
+        const msg = document.getElementById("entryMsg");
+        if (result.success) {
+          msg.innerText = "✅ Transaction added successfully!";
+          e.target.reset();
+          loadData();
+        } else {
+          msg.innerText = "❌ Failed: " + result.error;
+        }
+      } catch (err) {
+        document.getElementById("entryMsg").innerText = "❌ Error submitting data.";
+        console.error(err);
+      }
+    });
+
+    function toggleMode() {
+      document.body.classList.toggle("day-mode");
+    }
+  </script>
+</body>
+</html>
